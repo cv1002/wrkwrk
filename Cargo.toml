@@ -14,7 +14,7 @@ features = ["derive"]
 
 [dependencies.mlua]
 version = "0.8.6"
-features = ["lua54", "serialize"]
+features = ["luajit", "serialize"]
 
 [dependencies.clap]
 version = "4.0.8"
