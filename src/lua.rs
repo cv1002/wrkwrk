@@ -1,7 +1,7 @@
 // Standard Libs
 use std::io::Read;
 // External Libs
-use mlua::LuaSerdeExt;
+use mlua::{LuaSerdeExt, Lua};
 use serde::{Deserialize, Serialize};
 
 use crate::args;
@@ -18,9 +18,7 @@ pub struct Wrk {
     pub thread: Option<()>,
 }
 
-pub fn get_wrk() -> Wrk {
-    // Create lua runtime
-    let lua = mlua::Lua::new();
+pub fn get_wrk(lua: &Lua) -> Wrk {
     lua.load(include_str!("wrk.lua")).exec().unwrap();
     if let Some(path) = args.script.as_deref() {
         // Open file

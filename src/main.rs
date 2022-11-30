@@ -3,9 +3,10 @@
 mod client;
 mod lua;
 // Standard Libs
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::AtomicU32;
 // External Libs
 use clap::{command, Parser};
+use client::Client;
 use tokio::time::{Duration, Instant};
 
 #[derive(Parser, Debug)]
@@ -21,7 +22,7 @@ struct CommandLineArgs {
     duration: u32,
 
     #[arg(short, long)]
-    threads: usize,
+    threads: u32,
 
     #[arg(short, long)]
     latency: bool,
@@ -29,7 +30,7 @@ struct CommandLineArgs {
     #[arg(long)]
     http2: bool,
 
-    #[arg(long)]
+    #[arg(short, long)]
     script: Option<String>,
 
     #[arg(short = 'H', long)]
@@ -50,44 +51,34 @@ lazy_static::lazy_static! {
     static ref failure_count: AtomicU32 = AtomicU32::new(0);
 }
 
-async fn client_get() -> Result<(), Box<dyn std::error::Error>> {
-    let _ = reqwest::get(&args.url).await?;
-    Ok(())
-}
-
 /// TODO DISPLAY RESULT MESSAGE
 fn display_result() {}
 
 // 1.一比一复刻WRK的特性
 // 2.给WRK增加HTTP2的功能
 fn main() {
-    let wrk = lua::get_wrk();
-    // Create tokio runtime for later use
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(args.threads)
-        .enable_all()
-        .build()
-        .unwrap();
+    // Create lua runtime
+    let lua = mlua::Lua::new();
+    let wrk = lua::get_wrk(&lua);
+
     let end_time = Instant::now() + Duration::from_secs(args.duration.into());
     // Send messages to server
-    for _ in 0..args.connections {
-        let end_time = end_time.clone();
-        runtime.spawn(async move {
-            loop {
-                match client_get().await {
-                    Err(_) => {
-                        failure_count.fetch_add(1, Ordering::SeqCst);
-                    }
-                    Ok(_) => {
-                        success_count.fetch_add(1, Ordering::SeqCst);
-                    }
-                };
-                // At end time we end the procedure
-                if Instant::now() >= end_time {
-                    break;
+    for _ in 0..args.threads {
+        std::thread::spawn({
+            let end_time = end_time.clone();
+            move || {
+                // Create tokio runtime for later use
+                let runtime = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap();
+                for _ in 0..(args.connections / args.threads) {
+                    let end_time = end_time.clone();
+                    runtime.spawn(Client {}.client_loop(end_time));
                 }
             }
         });
     }
+
     display_result();
 }
