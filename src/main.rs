@@ -1,7 +1,7 @@
 #![allow(non_upper_case_globals)]
 // Internal Mods
-mod lua;
 mod client;
+mod lua;
 // Standard Libs
 use std::sync::atomic::{AtomicU32, Ordering};
 // External Libs
@@ -27,6 +27,9 @@ struct CommandLineArgs {
     latency: bool,
 
     #[arg(long)]
+    http2: bool,
+
+    #[arg(long)]
     script: Option<String>,
 
     #[arg(short = 'H', long)]
@@ -36,7 +39,7 @@ struct CommandLineArgs {
     timeout: Option<u32>,
 }
 
-lazy_static::lazy_static!(
+lazy_static::lazy_static! {
     /// Command line arguments
     static ref args: CommandLineArgs = CommandLineArgs::parse();
     /// Connections count: keep connections count just equals ARGS.connections
@@ -45,7 +48,7 @@ lazy_static::lazy_static!(
     static ref success_count: AtomicU32 = AtomicU32::new(0);
     /// Failure count
     static ref failure_count: AtomicU32 = AtomicU32::new(0);
-);
+}
 
 async fn client_get() -> Result<(), Box<dyn std::error::Error>> {
     let _ = reqwest::get(&args.url).await?;
