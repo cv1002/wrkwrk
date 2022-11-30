@@ -1,0 +1,37 @@
+[package]
+name = "my_wrk"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reqwest = "0.11.12"
+lazy_static = "1.4.0"
+
+
+[dependencies.serde]
+version = "1.0.148"
+features = ["derive"]
+
+[dependencies.mlua]
+version = "0.8.6"
+features = ["lua54", "serialize"]
+
+[dependencies.clap]
+version = "4.0.8"
+features = ["derive"]
+
+[dependencies.tokio]
+version = "1.21.2"
+features = ["full"]
+
+# [target.x86_64-apple-darwin]
+# rustflags = [
+#   "-C", "link-arg=-undefined",
+#   "-C", "link-arg=dynamic_lookup",
+# ]
+
+# [target.aarch64-apple-darwin]
+# rustflags = [
+#   "-C", "link-arg=-undefined",
+#   "-C", "link-arg=dynamic_lookup",
+# ]
