@@ -27,6 +27,7 @@ pub struct HttpRequest {
     pub headers: Option<HashMap<String, String>>,
     pub body: Option<Vec<u8>>,
     pub timeout: Option<u32>,
+    pub version: Option<String>,
 }
 
 pub struct WrkLuaVM {

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue},
@@ -8,6 +8,7 @@ use tokio::time::Instant;
 
 use crate::{
     lua::{Wrk, WrkLuaVM},
+    util::transform::Transformation,
     CommandLineArgs,
 };
 
@@ -29,11 +30,7 @@ impl Client {
         let request = self.lua.get_request()?;
 
         let method = {
-            let method = request
-                .method
-                .as_deref()
-                .or(self.wrk.method.as_deref())
-                .unwrap_or("GET");
+            let method = request.method.as_deref().unwrap();
             match method {
                 "GET" => reqwest::Method::GET,
                 "POST" => reqwest::Method::POST,
@@ -42,37 +39,11 @@ impl Client {
                 _ => unimplemented!(),
             }
         };
-        let url = {
-            let url = request
-                .url
-                .as_deref()
-                .or(self.wrk.path.as_deref())
-                .unwrap_or("");
-            let url = request
-                .host
-                .as_deref()
-                .or(self.wrk.host.as_deref())
-                .unwrap_or("127.0.0.1")
-                .to_owned()
-                + &request.port.or(self.wrk.port).unwrap_or(80).to_string()
-                + url;
-            url
-        };
-        let body = {
-            reqwest::Body::try_from(
-                request
-                    .body
-                    .clone()
-                    .or(self.wrk.body.clone())
-                    .unwrap_or(Vec::new()),
-            )
-            .unwrap()
-        };
+        let url =
+            { request.host.unwrap() + &request.port.unwrap().to_string() + &request.url.unwrap() };
+
         let headers = {
-            let headers = request
-                .headers
-                .and_then(|headers| headers.into())
-                .unwrap_or(HashMap::new());
+            let headers = request.headers.unwrap();
             let mut headermap = HeaderMap::with_capacity(headers.len());
             for (k, v) in headers {
                 headermap.append(
@@ -82,8 +53,7 @@ impl Client {
             }
             headermap
         };
-        let timeout =
-            { Duration::from_micros(request.timeout.or(args.timeout).unwrap_or(30000).into()) };
+        let timeout = { Duration::from_micros(request.timeout.unwrap().into()) };
         let version = {
             if args.http10 {
                 Version::HTTP_10
@@ -94,14 +64,28 @@ impl Client {
             } else if args.http3 {
                 Version::HTTP_3
             } else {
-                Version::HTTP_2
+                match request.version.as_deref().unwrap() {
+                    "HTTP1.0" => Version::HTTP_10,
+                    "HTTP1.1" => Version::HTTP_11,
+                    "HTTP2" => Version::HTTP_2,
+                    "HTTP3" => Version::HTTP_3,
+                    _ => Version::HTTP_2,
+                }
             }
         };
 
         Ok(self
             .client
             .request(method, url)
-            .body(body)
+            // Prepare body
+            .transformation(|req| {
+                if let Some(body) = request.body {
+                    req.body(reqwest::Body::try_from(body).unwrap())
+                } else {
+                    req
+                }
+            })
+            // Prepare other parameters
             .headers(headers)
             .timeout(timeout)
             .version(version)

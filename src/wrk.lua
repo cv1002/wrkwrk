@@ -8,6 +8,7 @@ local wrk = {
   body    = nil,
   thread  = nil,
   timeout = 30000,
+  version = "HTTP2",
 }
 
 function wrk.resolve(host, service)
@@ -48,7 +49,7 @@ function wrk.init(args)
   end
 end
 
-function wrk.format(host, port, method, url, headers, body, timeout)
+function wrk.format(host, port, method, url, headers, body, timeout, version)
   if not headers["Host"] then
     headers["Host"] = wrk.headers["Host"]
   end
@@ -60,6 +61,7 @@ function wrk.format(host, port, method, url, headers, body, timeout)
   local headers = headers or wrk.headers
   local body    = body or wrk.body
   local timeout = timeout or wrk.timeout
+  local version = version or wrk.version
 
   return {
     host    = host,
@@ -68,7 +70,8 @@ function wrk.format(host, port, method, url, headers, body, timeout)
     url     = url,
     headers = headers,
     body    = body,
-    timeout = timeout
+    timeout = timeout,
+    version = version,
   }
 end
 
