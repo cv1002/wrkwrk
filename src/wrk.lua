@@ -11,6 +11,10 @@ local wrk = {
   version = "HTTP2",
 }
 
+function wrk.lookup(host, service)
+  return lookup(host, service)
+end
+
 function wrk.resolve(host, service)
   local addrs = wrk.lookup(host, service)
   for i = #addrs, 1, -1 do
