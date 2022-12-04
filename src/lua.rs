@@ -1,7 +1,7 @@
 // Standard Libs
 use std::{collections::HashMap, io::Read};
 // External Libs
-use mlua::{Function, Lua, LuaSerdeExt, Value};
+use mlua::{Function, Lua, LuaSerdeExt};
 use serde::{Deserialize, Serialize};
 // Internal Mods
 use crate::CommandLineArgs;

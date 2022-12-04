@@ -7,14 +7,15 @@ local wrk = {
   headers = {},
   body    = nil,
   thread  = nil,
+  timeout = 30000,
 }
 
 function wrk.resolve(host, service)
   local addrs = wrk.lookup(host, service)
   for i = #addrs, 1, -1 do
-     if not wrk.connect(addrs[i]) then
-        table.remove(addrs, i)
-     end
+    if not wrk.connect(addrs[i]) then
+      table.remove(addrs, i)
+    end
   end
   wrk.addrs = addrs
 end
@@ -22,53 +23,53 @@ end
 function wrk.setup(thread)
   thread.addr = wrk.addrs[1]
   if type(setup) == "function" then
-     setup(thread)
+    setup(thread)
   end
 end
 
 function wrk.init(args)
   if not wrk.headers["Host"] then
-     local host = wrk.host
-     local port = wrk.port
+    local host = wrk.host
+    local port = wrk.port
 
-     host = host:find(":") and ("[" .. host .. "]")  or host
-     host = port           and (host .. ":" .. port) or host
+    host = host:find(":") and ("[" .. host .. "]") or host
+    host = port and (host .. ":" .. port) or host
 
-     wrk.headers["Host"] = host
+    wrk.headers["Host"] = host
   end
 
   if type(init) == "function" then
-     init(args)
+    init(args)
   end
 
   local req = wrk.format()
   wrk.request = function()
-     return req
+    return req
   end
 end
 
-function wrk.format(method, path, headers, body)
-  local method  = method  or wrk.method
-  local path    = path    or wrk.path
-  local headers = headers or wrk.headers
-  local body    = body    or wrk.body
-  local s       = {}
-
+function wrk.format(host, port, method, url, headers, body, timeout)
   if not headers["Host"] then
-     headers["Host"] = wrk.headers["Host"]
+    headers["Host"] = wrk.headers["Host"]
   end
 
-  headers["Content-Length"] = body and string.len(body)
+  local host    = host or headers["Host"]
+  local port    = port or wrk.port
+  local method  = method or wrk.method
+  local url     = url or wrk.path
+  local headers = headers or wrk.headers
+  local body    = body or wrk.body
+  local timeout = timeout or wrk.timeout
 
-  s[1] = string.format("%s %s HTTP/1.1", method, path)
-  for name, value in pairs(headers) do
-     s[#s+1] = string.format("%s: %s", name, value)
-  end
-
-  s[#s+1] = ""
-  s[#s+1] = body or ""
-
-  return table.concat(s, "\r\n")
+  return {
+    host    = host,
+    port    = port,
+    method  = method,
+    url     = url,
+    headers = headers,
+    body    = body,
+    timeout = timeout
+  }
 end
 
 return wrk
