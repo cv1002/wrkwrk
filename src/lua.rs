@@ -1,34 +1,9 @@
 // Standard Libs
-use std::{collections::HashMap, io::Read};
+use std::io::Read;
 // External Libs
-use mlua::{Function, Lua, LuaSerdeExt};
-use serde::{Deserialize, Serialize};
+use mlua::Lua;
 // Internal Mods
 use crate::CommandLineArgs;
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct Wrk {
-    pub scheme: Option<String>,
-    pub host: Option<String>,
-    pub port: Option<u32>,
-    pub method: Option<String>,
-    pub path: Option<String>,
-    pub headers: Option<String>,
-    pub body: Option<Vec<u8>>,
-    pub thread: Option<()>,
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct HttpRequest {
-    pub host: Option<String>,
-    pub port: Option<u32>,
-    pub method: Option<String>,
-    pub url: Option<String>,
-    pub headers: Option<HashMap<String, String>>,
-    pub body: Option<Vec<u8>>,
-    pub timeout: Option<u32>,
-    pub version: Option<String>,
-}
 
 pub struct WrkLuaVM {
     lua: Lua,
@@ -61,13 +36,8 @@ impl WrkLuaVM {
 
         Ok(object)
     }
-    pub fn get_wrk(&self) -> Result<Wrk, mlua::Error> {
-        let wrk = self.lua.globals().get("wrk")?;
-        self.lua.from_value(wrk)
-    }
-    pub fn get_request(&self) -> Result<HttpRequest, mlua::Error> {
-        let request_fn: Function = self.lua.globals().get("request")?;
-        self.lua.from_value(request_fn.call(())?)
+    pub fn get_vm(&self) -> &Lua {
+        &self.lua
     }
     pub fn setup(&self) -> Result<(), mlua::Error> {
         self.lua.load("setup()").exec()?;

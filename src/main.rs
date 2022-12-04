@@ -1,15 +1,15 @@
 #![allow(non_upper_case_globals)]
-// Internal Mods
-mod client;
-mod lua;
-mod util;
-use lua::WrkLuaVM;
 // Standard Libs
 use std::sync::Arc;
 // External Libs
 use clap::{command, Parser};
 use client::Client;
 use tokio::time::{Duration, Instant};
+// Internal Mods
+mod client;
+mod lua;
+mod util;
+use lua::WrkLuaVM;
 
 const about: &str = r#"
 wrk is a modern HTTP benchmarking tool capable of generating significant load when run on a single multi-core CPU.

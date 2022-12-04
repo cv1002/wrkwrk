@@ -1,20 +1,17 @@
+// Standard Mods
 use std::{sync::Arc, time::Duration};
-
+// External Mods
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue},
     Request, Version,
 };
 use tokio::time::Instant;
-
-use crate::{
-    lua::{Wrk, WrkLuaVM},
-    util::transform::Transformation,
-    CommandLineArgs,
-};
+// Internal Mods
+pub mod httprequest;
+use crate::{lua::WrkLuaVM, util::transform::Transformation, CommandLineArgs};
 
 pub struct Client {
     pub lua: Arc<WrkLuaVM>,
-    pub wrk: Wrk,
     pub client: reqwest::Client,
 }
 unsafe impl Send for Client {}
@@ -22,12 +19,11 @@ unsafe impl Sync for Client {}
 
 impl Client {
     pub fn new(lua: Arc<WrkLuaVM>) -> Result<Self, mlua::Error> {
-        let wrk = lua.get_wrk()?;
         let client = reqwest::Client::new();
-        Ok(Self { lua, wrk, client })
+        Ok(Self { lua, client })
     }
     pub fn make_request(&mut self, args: &CommandLineArgs) -> Result<Request, mlua::Error> {
-        let request = self.lua.get_request()?;
+        let request = httprequest::HttpRequest::get_request(self.lua.get_vm()).unwrap();
 
         let method = {
             let method = request.method.as_deref().unwrap();
