@@ -47,11 +47,17 @@ pub struct CommandLineArgs {
     )]
     pub latency: bool,
 
-    #[arg(long, help = "Use http1")]
-    pub http1: bool,
+    #[arg(long, help = "Use http1.0")]
+    pub http10: bool,
+
+    #[arg(long, help = "Use http1.1")]
+    pub http11: bool,
 
     #[arg(long, help = "Use http2")]
     pub http2: bool,
+
+    #[arg(long, help = "Use http3")]
+    pub http3: bool,
 
     #[arg(short, long, id = "ScriptPath", help = "Load Lua script file")]
     pub script: Option<String>,
@@ -87,7 +93,9 @@ fn procedure(args: Arc<CommandLineArgs>) {
                 runtime.block_on(async {
                     for _ in 0..(args.connections / args.threads) {
                         runtime.spawn(
-                            Client::new(lua_vm.clone()).client_loop(args.clone(), end_time.clone()),
+                            Client::new(lua_vm.clone())
+                                .unwrap()
+                                .client_loop(args.clone(), end_time.clone()),
                         );
                     }
                 });
