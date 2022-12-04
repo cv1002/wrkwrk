@@ -10,6 +10,7 @@ pub struct WrkLuaVM {
 
     __private: (),
 }
+// Public fns
 impl WrkLuaVM {
     pub fn new(args: &CommandLineArgs) -> Result<Self, mlua::Error> {
         // Build object
@@ -20,7 +21,7 @@ impl WrkLuaVM {
         // Load wrk scripts and do setup.
         object.lua.load(include_str!("wrk.lua")).exec()?;
         object.setup()?;
-        object.register_lookup();
+        object.register_lookup()?;
         // If commandline arguments have script, then run this script file
         if let Some(path) = args.script.as_deref() {
             // Open file
@@ -44,6 +45,7 @@ impl WrkLuaVM {
         Ok(())
     }
 }
+// Private fns
 impl WrkLuaVM {
     fn register_lookup(&self) -> Result<(), mlua::Error> {
         let script_wrk_lookup =
