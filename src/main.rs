@@ -2,6 +2,7 @@
 // Internal Mods
 mod client;
 mod lua;
+mod uril;
 use lua::WrkLuaVM;
 // Standard Libs
 use std::sync::Arc;
