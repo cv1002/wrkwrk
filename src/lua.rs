@@ -24,13 +24,17 @@ pub struct WrkLuaVM {
     __private: (),
 }
 impl WrkLuaVM {
-    pub fn new(lua: Lua) -> Result<Self, mlua::Error> {
-        let object = Self { lua, __private: () };
+    pub fn new(args: &CommandLineArgs) -> Result<Self, mlua::Error> {
+        // Build object
+        let object = Self {
+            lua: mlua::Lua::new(),
+            __private: (),
+        };
+        // Load wrk scripts and do setup.
+        object.lua.load(include_str!("wrk.lua")).exec()?;
         object.setup()?;
-        Ok(object)
-    }
-    pub fn get_wrk(&self, args: &CommandLineArgs) -> Result<Wrk, mlua::Error> {
-        self.lua.load(include_str!("wrk.lua")).exec()?;
+
+        // If commandline arguments have script, then run this script file
         if let Some(path) = args.script.as_deref() {
             // Open file
             let mut file = std::fs::File::open(path)?;
@@ -40,13 +44,14 @@ impl WrkLuaVM {
                 let _ = file.read_to_end(&mut script)?;
                 script
             };
-            self.lua.load(&script).exec()?;
+            object.lua.load(&script).exec()?;
         }
-        let wrk: Wrk = {
-            let wrk = self.lua.globals().get("wrk")?;
-            self.lua.from_value(wrk)?
-        };
-        Ok(wrk)
+
+        Ok(object)
+    }
+    pub fn get_wrk(&self) -> Result<Wrk, mlua::Error> {
+        let wrk = self.lua.globals().get("wrk")?;
+        self.lua.from_value(wrk)
     }
     pub fn setup(&self) -> Result<(), mlua::Error> {
         self.lua.load("setup()").exec()?;

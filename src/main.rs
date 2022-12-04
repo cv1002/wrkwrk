@@ -82,7 +82,7 @@ fn procedure(args: Arc<CommandLineArgs>) {
                     .build()
                     .unwrap();
                 // Each thread should create a lua virtual machine
-                let lua_vm = Arc::new(WrkLuaVM::new(mlua::Lua::new()).unwrap());
+                let lua_vm = Arc::new(WrkLuaVM::new(args.as_ref()).unwrap());
                 // Each connection create a coroutine
                 runtime.block_on(async {
                     for _ in 0..(args.connections / args.threads) {

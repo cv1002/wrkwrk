@@ -9,9 +9,13 @@ pub struct Client {
 }
 unsafe impl Send for Client {}
 unsafe impl Sync for Client {}
+
 impl Client {
     pub fn new(lua: Arc<WrkLuaVM>) -> Self {
         Self { lua }
+    }
+    pub async fn make_request(&mut self) {
+
     }
     pub async fn client_loop(self, args: Arc<CommandLineArgs>, end_time: Instant) {
         loop {
