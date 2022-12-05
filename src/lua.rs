@@ -91,6 +91,7 @@ impl WrkLuaVM {
                     libc::freeaddrinfo(addrs);
                     Ok(())
                 })?;
-        self.lua.globals().set("lookup", script_wrk_lookup)
+        let wrk: mlua::Table = self.lua.globals().get("wrk")?;
+        wrk.set("lookup", script_wrk_lookup)
     }
 }
