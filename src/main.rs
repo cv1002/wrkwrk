@@ -103,10 +103,9 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
             }
         })
     };
-
-    let results = (0..args.threads)
-        .map(handler)
+    let results = vec![(); args.threads as usize]
         .into_iter()
+        .map(handler)
         .map(|handle| handle.join())
         .collect::<Vec<_>>();
 
