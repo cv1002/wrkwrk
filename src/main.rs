@@ -1,8 +1,8 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
-// Standard Libs
+// Standard Mods
 use std::{any::Any, sync::Arc};
-// External Libs
+// External Mods
 use clap::{command, Parser};
 use client::Client;
 use tokio::time::{Duration, Instant};
