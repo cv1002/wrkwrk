@@ -11,18 +11,7 @@ local wrk = {
   version = "HTTP2",
 }
 
-function wrk.resolve(host, service)
-  local addrs = wrk.lookup(host, service)
-  for i = #addrs, 1, -1 do
-    if not wrk.connect(addrs[i]) then
-      table.remove(addrs, i)
-    end
-  end
-  wrk.addrs = addrs
-end
-
 function wrk.setup(thread)
-  thread.addr = wrk.addrs[1]
   if type(setup) == "function" then
     setup(thread)
   end
