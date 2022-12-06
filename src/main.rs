@@ -11,7 +11,6 @@ mod client;
 mod lua;
 mod util;
 use lua::WrkLuaVM;
-use util::transform::Transformation;
 
 const about: &str = r#"
 wrk is a modern HTTP benchmarking tool capable of generating significant load when run on a single multi-core CPU.
