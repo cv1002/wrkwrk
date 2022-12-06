@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 // Standard Libs
-use std::sync::Arc;
+use std::{any::Any, sync::Arc, thread::JoinHandle};
 // External Libs
 use clap::{command, Parser};
 use client::Client;
@@ -11,6 +11,7 @@ mod client;
 mod lua;
 mod util;
 use lua::WrkLuaVM;
+use util::transform::Transformation;
 
 const about: &str = r#"
 wrk is a modern HTTP benchmarking tool capable of generating significant load when run on a single multi-core CPU.
@@ -74,10 +75,10 @@ pub struct CommandLineArgs {
 /// TODO DISPLAY RESULT MESSAGE
 fn display_result() {}
 
-fn procedure(args: Arc<CommandLineArgs>) {
+fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>> {
     let end_time = Instant::now() + Duration::from_secs(args.duration.into());
     // Send messages to server
-    for _ in 0..args.threads {
+    let handler = |_| {
         std::thread::spawn({
             // Sharing some datastructures
             let args = args.clone();
@@ -102,12 +103,19 @@ fn procedure(args: Arc<CommandLineArgs>) {
                     }
                 });
             }
-        });
-    }
+        })
+    };
+    let threads: Vec<JoinHandle<()>> = (0..args.threads).map(handler).collect();
 
+    let results = threads
+        .into_iter()
+        .map(|handle| handle.join())
+        .collect::<Vec<_>>();
     display_result();
+
+    results
 }
 
 fn main() {
-    procedure(Arc::new(CommandLineArgs::parse()));
+    let _ = procedure(Arc::new(CommandLineArgs::parse()));
 }
