@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 // Standard Libs
-use std::{any::Any, sync::Arc, thread::JoinHandle};
+use std::{any::Any, sync::Arc};
 // External Libs
 use clap::{command, Parser};
 use client::Client;
@@ -81,7 +81,6 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
         std::thread::spawn({
             // Sharing some datastructures
             let args = args.clone();
-            let end_time = end_time.clone();
             // Main client loop
             move || {
                 // Create tokio runtime for later use
@@ -97,16 +96,16 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
                         runtime.spawn(
                             Client::new(lua_vm.clone())
                                 .unwrap()
-                                .client_loop(args.clone(), end_time.clone()),
+                                .client_loop(args.clone(), end_time),
                         );
                     }
                 });
             }
         })
     };
-    let threads: Vec<JoinHandle<()>> = (0..args.threads).map(handler).collect();
 
-    let results = threads
+    let results = (0..args.threads)
+        .map(handler)
         .into_iter()
         .map(|handle| handle.join())
         .collect::<Vec<_>>();

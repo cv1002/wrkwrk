@@ -96,7 +96,7 @@ impl<F: FnOnce(&T), T: Sized> OptionInspectRef<F, T> for Option<T> {
 
 impl<F: FnOnce(), T> OptionInspectNone<F> for Option<T> {
     fn inspect_none(self, f: F) -> Self {
-        if let None = self.as_ref() {
+        if self.is_none() {
             f();
         }
 
@@ -106,7 +106,7 @@ impl<F: FnOnce(), T> OptionInspectNone<F> for Option<T> {
 
 impl<F: FnOnce(), T> OptionInspectNoneRef<F> for Option<T> {
     fn inspect_none_ref(&self, f: F) -> &Self {
-        if let None = self {
+        if self.is_none() {
             f();
         }
 
