@@ -39,8 +39,11 @@ impl WrkLuaVM {
     pub fn get_vm(&self) -> &Lua {
         &self.lua
     }
-    pub fn setup(&self) -> Result<(), mlua::Error> {
+    fn setup(&self) -> Result<(), mlua::Error> {
         self.lua.load("setup()").exec()?;
+        Ok(())
+    }
+    fn request(&self) -> Result<(), mlua::Error> {
         Ok(())
     }
 }
