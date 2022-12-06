@@ -6,14 +6,15 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct HttpRequest {
-    pub host: Option<String>,
-    pub port: Option<u32>,
-    pub method: Option<String>,
-    pub url: Option<String>,
-    pub headers: Option<HashMap<String, String>>,
+    pub host: String,
+    pub port: u32,
+    pub method: String,
+    pub url: String,
+    pub headers: HashMap<String, String>,
+    pub timeout: u32,
+    pub version: String,
+    // Fields that could be none
     pub body: Option<Vec<u8>>,
-    pub timeout: Option<u32>,
-    pub version: Option<String>,
 }
 
 impl HttpRequest {

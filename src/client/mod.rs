@@ -26,7 +26,7 @@ impl Client {
         let request = httprequest::HttpRequest::get_request(self.lua.get_vm()).unwrap();
 
         let method = {
-            let method = request.method.as_deref().unwrap();
+            let method = request.method.as_str();
             match method {
                 "GET" => reqwest::Method::GET,
                 "POST" => reqwest::Method::POST,
@@ -36,12 +36,11 @@ impl Client {
             }
         };
         let url =
-            { request.host.unwrap() + &request.port.unwrap().to_string() + &request.url.unwrap() };
+            { request.host + &request.port.to_string() + &request.url };
 
         let headers = {
-            let headers = request.headers.unwrap();
-            let mut headermap = HeaderMap::with_capacity(headers.len());
-            for (k, v) in headers {
+            let mut headermap = HeaderMap::with_capacity(request.headers.len());
+            for (k, v) in request.headers.iter() {
                 headermap.append(
                     HeaderName::try_from(k).unwrap(),
                     HeaderValue::try_from(v).unwrap(),
@@ -49,7 +48,7 @@ impl Client {
             }
             headermap
         };
-        let timeout = { Duration::from_micros(request.timeout.unwrap().into()) };
+        let timeout = { Duration::from_micros(request.timeout.into()) };
         let version = {
             if args.http10 {
                 Version::HTTP_10
@@ -60,7 +59,7 @@ impl Client {
             } else if args.http3 {
                 Version::HTTP_3
             } else {
-                match request.version.as_deref().unwrap() {
+                match request.version.as_str() {
                     "HTTP1.0" => Version::HTTP_10,
                     "HTTP1.1" => Version::HTTP_11,
                     "HTTP2" => Version::HTTP_2,
