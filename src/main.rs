@@ -109,7 +109,6 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
         .into_iter()
         .map(|handle| handle.join())
         .collect::<Vec<_>>();
-    display_result();
 
     results
 }
