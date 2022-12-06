@@ -43,7 +43,4 @@ impl WrkLuaVM {
         self.lua.load("setup()").exec()?;
         Ok(())
     }
-    fn request(&self) -> Result<(), mlua::Error> {
-        Ok(())
-    }
 }
