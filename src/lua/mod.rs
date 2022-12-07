@@ -1,12 +1,9 @@
 // Standard Libs
-use std::{collections::HashMap, fs::File, io::Read};
+use std::collections::HashMap;
 // External Libs
 use mlua::{Function, Lua, LuaSerdeExt};
 // Internal Mods
-use crate::{
-    util::inspect::{OptionInspect, OptionInspectRef, ResultInspect},
-    CommandLineArgs,
-};
+use crate::CommandLineArgs;
 
 pub struct WrkLuaVM {
     lua: Lua,
