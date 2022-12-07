@@ -102,11 +102,9 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
                 // Each connection create a coroutine
                 runtime.block_on(async {
                     for _ in 0..(args.connections / args.threads) {
-                        runtime.spawn(
-                            Client::new(id.load(Ordering::SeqCst), lua_vm.clone())
-                                .unwrap()
-                                .client_loop(args.clone(), end_time),
-                        );
+                        Client::new(id.load(Ordering::SeqCst), lua_vm.clone())
+                            .unwrap()
+                            .client_loop(&runtime, args.clone(), end_time);
                         id.fetch_add(1, Ordering::SeqCst);
                     }
                 });

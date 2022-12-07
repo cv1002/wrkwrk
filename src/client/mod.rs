@@ -5,7 +5,7 @@ use reqwest::{
     header::{HeaderName, HeaderValue},
     Request, Version,
 };
-use tokio::time::Instant;
+use tokio::{runtime::Runtime, time::Instant, task::JoinHandle};
 // Internal Mods
 pub mod httprequest;
 use crate::{lua::WrkLuaVM, util::transform::Transformation, CommandLineArgs};
@@ -23,18 +23,20 @@ impl Client {
         let client = reqwest::Client::new();
         Ok(Self { id, lua, client })
     }
-    pub async fn client_loop(mut self, args: Arc<CommandLineArgs>, end_time: Instant) {
-        loop {
-            // Request and response
-            let request = self.make_request(args.as_ref()).unwrap();
-            self.handle_response(request).await;
-            // Release delay
-            self.lua.delay().unwrap();
-            // At end time we end the procedure
-            if Instant::now() >= end_time {
-                break;
+    pub fn client_loop(mut self, runtime: &Runtime, args: Arc<CommandLineArgs>, end_time: Instant) -> JoinHandle<()> {
+        runtime.spawn(async move {
+            loop {
+                // Request and response
+                let request = self.make_request(args.as_ref()).unwrap();
+                self.handle_response(request).await;
+                // Release delay
+                self.lua.delay().unwrap();
+                // At end time we end the procedure
+                if Instant::now() >= end_time {
+                    break;
+                }
             }
-        }
+        })
     }
 }
 // Private methods
