@@ -55,5 +55,4 @@ impl WrkLuaVM {
         let init: Function = self.lua.globals().get("init")?;
         init.call(self.lua.to_value(args))
     }
-
 }
