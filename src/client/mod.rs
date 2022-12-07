@@ -36,7 +36,6 @@ impl Client {
             }
         };
         let url = { request.host + &request.port.to_string() + &request.url };
-
         let headers = {
             let mut headermap = HeaderMap::with_capacity(request.headers.len());
             for (k, v) in request.headers.iter() {
