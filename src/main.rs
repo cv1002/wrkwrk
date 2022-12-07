@@ -1,14 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 // Standard Mods
-use std::{
-    any::Any,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
-    thread,
-};
+use std::{any::Any, sync::Arc};
 // External Mods
 use clap::{command, Parser};
 use client::Client;
@@ -101,9 +94,11 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
                 // Each connection create a coroutine
                 runtime.block_on(async {
                     for _ in 0..(args.connections / args.threads) {
-                        Client::new(id, lua_vm.clone())
-                            .unwrap()
-                            .client_loop(&runtime, args.clone(), end_time);
+                        Client::new(id, lua_vm.clone()).unwrap().client_loop(
+                            &runtime,
+                            args.clone(),
+                            end_time,
+                        );
                         id += 1;
                     }
                 });
