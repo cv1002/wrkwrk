@@ -26,13 +26,11 @@ impl WrkLuaVM {
         object.setup()?;
         object.init(args)?;
         // If commandline arguments have script, then run this script file
-        args.script.as_deref().inspect_some(|script| {
-            object
-                .lua
-                .load(*script)
-                .exec()
-                .expect("Load lua script error.");
-        });
+        let _ = args
+            .script
+            .as_deref()
+            .map(|script| object.lua.load(script).exec())
+            .transpose()?;
 
         Ok(object)
     }
