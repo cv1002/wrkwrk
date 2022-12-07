@@ -3,6 +3,7 @@ name = "wrkwrk"
 version = "0.2.0"
 edition = "2021"
 
+# panic setting
 [profile.dev]
 panic = "abort"
 [profile.release]
