@@ -26,28 +26,27 @@ impl Client {
     pub fn make_request(&mut self, args: &CommandLineArgs) -> Result<Request, mlua::Error> {
         let request = httprequest::HttpRequest::get_request(self.lua.get_vm()).unwrap();
 
-        let method = {
-            let method = request.method.as_str();
-            match method {
-                "GET" => reqwest::Method::GET,
-                "POST" => reqwest::Method::POST,
-                "DELETE" => reqwest::Method::DELETE,
-                "PUT" => reqwest::Method::PUT,
-                _ => unimplemented!(),
-            }
+        let method = match request.method.as_str() {
+            "GET" => reqwest::Method::GET,
+            "POST" => reqwest::Method::POST,
+            "DELETE" => reqwest::Method::DELETE,
+            "PUT" => reqwest::Method::PUT,
+            _ => unimplemented!(),
         };
         let url = { request.host + &request.port.to_string() + &request.url };
         let headers = {
-            let mut headermap = HeaderMap::with_capacity(request.headers.len());
-            for (k, v) in request.headers.iter() {
-                headermap.append(
-                    HeaderName::try_from(k).unwrap(),
-                    HeaderValue::try_from(v).unwrap(),
-                );
-            }
-            headermap
+            request
+                .headers
+                .iter()
+                .map(|(k, v)| {
+                    (
+                        HeaderName::try_from(k).unwrap(),
+                        HeaderValue::try_from(v).unwrap(),
+                    )
+                })
+                .collect()
         };
-        let timeout = { Duration::from_micros(request.timeout.into()) };
+        let timeout = Duration::from_micros(request.timeout.into());
         let version = match request.version.as_str() {
             // If give a version in commandline arguments
             _ if args.http10 => Version::HTTP_10,
