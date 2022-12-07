@@ -1,5 +1,5 @@
 // Standard Mods
-use std::{sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 // External Mods
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue},
@@ -35,8 +35,7 @@ impl Client {
                 _ => unimplemented!(),
             }
         };
-        let url =
-            { request.host + &request.port.to_string() + &request.url };
+        let url = { request.host + &request.port.to_string() + &request.url };
 
         let headers = {
             let mut headermap = HeaderMap::with_capacity(request.headers.len());
@@ -90,7 +89,24 @@ impl Client {
     pub async fn client_loop(mut self, args: Arc<CommandLineArgs>, end_time: Instant) {
         loop {
             let request = self.make_request(args.as_ref()).unwrap();
-            self.client.execute(request).await.unwrap();
+            let response = self.client.execute(request).await;
+            match response {
+                Ok(resp) => {
+                    let status = resp.status().as_u16();
+                    let headers = resp
+                        .headers()
+                        .iter()
+                        .map(|(key, value)| (key.to_string(), value.to_str().unwrap().to_string()))
+                        .collect::<HashMap<String, String>>();
+                    let body = resp.bytes().await.into_iter().fold(Vec::new(), |x, y| {
+                        x.into_iter().chain(y.into_iter()).collect()
+                    });
+                    self.lua.response(status, headers, body).unwrap();
+                }
+                Err(_) => {}
+            }
+            // Release delay
+            self.lua.delay().unwrap();
             // At end time we end the procedure
             if Instant::now() >= end_time {
                 break;

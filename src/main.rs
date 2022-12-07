@@ -5,6 +5,7 @@ use std::{any::Any, sync::Arc};
 // External Mods
 use clap::{command, Parser};
 use client::Client;
+use serde::{Serialize, Deserialize};
 use tokio::time::{Duration, Instant};
 // Internal Mods
 mod client;
@@ -17,7 +18,7 @@ wrk is a modern HTTP benchmarking tool capable of generating significant load wh
 It combines a multithreaded design with scalable event notification systems such as epoll and kqueue.
 "#;
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Serialize, Deserialize)]
 #[command(
     author,
     version,
