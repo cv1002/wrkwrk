@@ -104,6 +104,7 @@ impl Client {
         let response = self.client.execute(request).await;
         match response {
             Ok(resp) => {
+                // Get some response information
                 let status = resp.status().as_u16();
                 let headers = resp
                     .headers()
