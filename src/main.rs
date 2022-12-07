@@ -82,8 +82,11 @@ pub struct CommandLineArgs {
 fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>> {
     // Send messages to server
     let handler = |_| {
+        // Create some data structure for later use
         let id = AtomicUsize::new(0);
         let end_time = Instant::now() + Duration::from_secs(args.duration as u64);
+
+        // Build clients
         std::thread::spawn({
             // Sharing some datastructures
             let args = args.clone();
