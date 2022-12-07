@@ -48,18 +48,19 @@ impl Client {
             headermap
         };
         let timeout = { Duration::from_micros(request.timeout.into()) };
-        let version = {
-            match request.version.as_str() {
-                _ if args.http10 => Version::HTTP_10,
-                _ if args.http11 => Version::HTTP_11,
-                _ if args.http2 => Version::HTTP_2,
-                _ if args.http3 => Version::HTTP_3,
-                "HTTP1.0" => Version::HTTP_10,
-                "HTTP1.1" => Version::HTTP_11,
-                "HTTP2" => Version::HTTP_2,
-                "HTTP3" => Version::HTTP_3,
-                _ => Version::HTTP_2,
-            }
+        let version = match request.version.as_str() {
+            // If give a version in commandline arguments
+            _ if args.http10 => Version::HTTP_10,
+            _ if args.http11 => Version::HTTP_11,
+            _ if args.http2 => Version::HTTP_2,
+            _ if args.http3 => Version::HTTP_3,
+            // If don't give a version in commandline arguments
+            "HTTP1.0" => Version::HTTP_10,
+            "HTTP1.1" => Version::HTTP_11,
+            "HTTP2" => Version::HTTP_2,
+            "HTTP3" => Version::HTTP_3,
+            // If nothing, use http2
+            _ => Version::HTTP_2,
         };
 
         Ok(self
