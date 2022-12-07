@@ -5,11 +5,12 @@ use std::{any::Any, sync::Arc};
 // External Mods
 use clap::{command, Parser};
 use client::Client;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use tokio::time::{Duration, Instant};
 // Internal Mods
 mod client;
 mod lua;
+mod summary;
 mod util;
 use lua::WrkLuaVM;
 
@@ -34,13 +35,13 @@ pub struct CommandLineArgs {
         id = "ConnectionsAmount",
         help = "Connections to keep open"
     )]
-    pub connections: u32,
+    pub connections: usize,
 
     #[arg(short, long, id = "Seconds", help = "Duration of test")]
-    pub duration: u32,
+    pub duration: usize,
 
     #[arg(short, long, id = "ThreadsAmount", help = "Number of threads to use")]
-    pub threads: u32,
+    pub threads: usize,
 
     #[arg(
         short,
@@ -76,7 +77,7 @@ pub struct CommandLineArgs {
 fn display_result() {}
 
 fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>> {
-    let end_time = Instant::now() + Duration::from_secs(args.duration.into());
+    let end_time = Instant::now() + Duration::from_secs(args.duration as u64);
     // Send messages to server
     let handler = |_| {
         std::thread::spawn({
@@ -93,9 +94,9 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
                 let lua_vm = Arc::new(WrkLuaVM::new(args.as_ref()).unwrap());
                 // Each connection create a coroutine
                 runtime.block_on(async {
-                    for _ in 0..(args.connections / args.threads) {
+                    for id in 0..(args.connections / args.threads) {
                         runtime.spawn(
-                            Client::new(lua_vm.clone())
+                            Client::new(id, lua_vm.clone())
                                 .unwrap()
                                 .client_loop(args.clone(), end_time),
                         );
