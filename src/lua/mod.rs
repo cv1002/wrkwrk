@@ -1,9 +1,12 @@
 // Standard Libs
-use std::{io::Read, collections::HashMap};
+use std::{collections::HashMap, fs::File, io::Read};
 // External Libs
-use mlua::{Lua, Function, LuaSerdeExt};
+use mlua::{Function, Lua, LuaSerdeExt};
 // Internal Mods
-use crate::CommandLineArgs;
+use crate::{
+    util::inspect::{OptionInspect, OptionInspectRef, ResultInspect},
+    CommandLineArgs,
+};
 
 pub struct WrkLuaVM {
     lua: Lua,
@@ -23,17 +26,13 @@ impl WrkLuaVM {
         object.setup()?;
         object.init(args)?;
         // If commandline arguments have script, then run this script file
-        if let Some(path) = args.script.as_deref() {
-            // Open file
-            let mut file = std::fs::File::open(path)?;
-            // Read script from path
-            let script = {
-                let mut script = Vec::new();
-                let _ = file.read_to_end(&mut script)?;
-                script
-            };
-            object.lua.load(&script).exec()?;
-        }
+        args.script.as_deref().inspect_some(|script| {
+            object
+                .lua
+                .load(*script)
+                .exec()
+                .expect("Load lua script error.");
+        });
 
         Ok(object)
     }
@@ -44,7 +43,12 @@ impl WrkLuaVM {
         let delay: Function = self.lua.globals().get("delay")?;
         delay.call(())
     }
-    pub fn response(&self, status: u16, headers: HashMap<String, String>, body: Vec<u8>) -> Result<(), mlua::Error> {
+    pub fn response(
+        &self,
+        status: u16,
+        headers: HashMap<String, String>,
+        body: Vec<u8>,
+    ) -> Result<(), mlua::Error> {
         let response: Function = self.lua.globals().get("response")?;
         response.call((status, headers, body))
     }
