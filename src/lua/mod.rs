@@ -48,7 +48,7 @@ impl WrkLuaVM {
         let response: Function = self.lua.globals().get("response")?;
         response.call((status, headers, body))
     }
-    pub fn done(&self, summary: (), latency: (), requests: ()) {
+    pub fn done(&self, _summary: (), _latency: (), _requests: ()) {
         todo!()
     }
     fn setup(&self) -> Result<(), mlua::Error> {

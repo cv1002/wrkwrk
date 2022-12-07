@@ -103,22 +103,19 @@ impl Client {
 impl Client {
     async fn handle_response(&mut self, request: Request) {
         let response = self.client.execute(request).await;
-        match response {
-            Ok(resp) => {
-                // Get some response information
-                let status = resp.status().as_u16();
-                let headers = resp
-                    .headers()
-                    .iter()
-                    .map(|(key, value)| (key.to_string(), value.to_str().unwrap().to_string()))
-                    .collect::<HashMap<String, String>>();
-                let body = resp.bytes().await.into_iter().fold(Vec::new(), |x, y| {
-                    x.into_iter().chain(y.into_iter()).collect()
-                });
-                // Handle response function in script, if response is nil, skip
-                let _ = self.lua.response(status, headers, body);
-            }
-            Err(_) => {}
+        if let Ok(resp) = response {
+            // Get some response information
+            let status = resp.status().as_u16();
+            let headers = resp
+                .headers()
+                .iter()
+                .map(|(key, value)| (key.to_string(), value.to_str().unwrap().to_string()))
+                .collect::<HashMap<String, String>>();
+            let body = resp.bytes().await.into_iter().fold(Vec::new(), |x, y| {
+                x.into_iter().chain(y.into_iter()).collect()
+            });
+            // Handle response function in script, if response is nil, skip
+            let _ = self.lua.response(status, headers, body);
         }
     }
 }
