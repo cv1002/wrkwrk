@@ -73,9 +73,6 @@ pub struct CommandLineArgs {
     pub timeout: Option<u32>,
 }
 
-/// TODO DISPLAY RESULT MESSAGE
-fn display_result() {}
-
 fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>> {
     let end_time = Instant::now() + Duration::from_secs(args.duration as u64);
     // Send messages to server
