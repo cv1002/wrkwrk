@@ -86,25 +86,28 @@ impl Client {
             .build()
             .unwrap())
     }
+    async fn handle_response(&mut self, request: Request) {
+        let response = self.client.execute(request).await;
+        match response {
+            Ok(resp) => {
+                let status = resp.status().as_u16();
+                let headers = resp
+                    .headers()
+                    .iter()
+                    .map(|(key, value)| (key.to_string(), value.to_str().unwrap().to_string()))
+                    .collect::<HashMap<String, String>>();
+                let body = resp.bytes().await.into_iter().fold(Vec::new(), |x, y| {
+                    x.into_iter().chain(y.into_iter()).collect()
+                });
+                self.lua.response(status, headers, body).unwrap();
+            }
+            Err(_) => {}
+        }
+    }
     pub async fn client_loop(mut self, args: Arc<CommandLineArgs>, end_time: Instant) {
         loop {
             let request = self.make_request(args.as_ref()).unwrap();
-            let response = self.client.execute(request).await;
-            match response {
-                Ok(resp) => {
-                    let status = resp.status().as_u16();
-                    let headers = resp
-                        .headers()
-                        .iter()
-                        .map(|(key, value)| (key.to_string(), value.to_str().unwrap().to_string()))
-                        .collect::<HashMap<String, String>>();
-                    let body = resp.bytes().await.into_iter().fold(Vec::new(), |x, y| {
-                        x.into_iter().chain(y.into_iter()).collect()
-                    });
-                    self.lua.response(status, headers, body).unwrap();
-                }
-                Err(_) => {}
-            }
+            self.handle_response(request).await;
             // Release delay
             self.lua.delay().unwrap();
             // At end time we end the procedure
