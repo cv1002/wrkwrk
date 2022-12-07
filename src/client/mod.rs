@@ -106,6 +106,7 @@ impl Client {
     }
     pub async fn client_loop(mut self, args: Arc<CommandLineArgs>, end_time: Instant) {
         loop {
+            // Request and response
             let request = self.make_request(args.as_ref()).unwrap();
             self.handle_response(request).await;
             // Release delay
