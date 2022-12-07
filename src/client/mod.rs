@@ -49,22 +49,16 @@ impl Client {
         };
         let timeout = { Duration::from_micros(request.timeout.into()) };
         let version = {
-            if args.http10 {
-                Version::HTTP_10
-            } else if args.http11 {
-                Version::HTTP_11
-            } else if args.http2 {
-                Version::HTTP_2
-            } else if args.http3 {
-                Version::HTTP_3
-            } else {
-                match request.version.as_str() {
-                    "HTTP1.0" => Version::HTTP_10,
-                    "HTTP1.1" => Version::HTTP_11,
-                    "HTTP2" => Version::HTTP_2,
-                    "HTTP3" => Version::HTTP_3,
-                    _ => Version::HTTP_2,
-                }
+            match request.version.as_str() {
+                _ if args.http10 => Version::HTTP_10,
+                _ if args.http11 => Version::HTTP_11,
+                _ if args.http2 => Version::HTTP_2,
+                _ if args.http3 => Version::HTTP_3,
+                "HTTP1.0" => Version::HTTP_10,
+                "HTTP1.1" => Version::HTTP_11,
+                "HTTP2" => Version::HTTP_2,
+                "HTTP3" => Version::HTTP_3,
+                _ => Version::HTTP_2,
             }
         };
 
