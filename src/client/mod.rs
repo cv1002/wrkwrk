@@ -86,6 +86,21 @@ impl Client {
             .build()
             .unwrap())
     }
+    pub async fn client_loop(mut self, args: Arc<CommandLineArgs>, end_time: Instant) {
+        loop {
+            // Request and response
+            let request = self.make_request(args.as_ref()).unwrap();
+            self.handle_response(request).await;
+            // Release delay
+            self.lua.delay().unwrap();
+            // At end time we end the procedure
+            if Instant::now() >= end_time {
+                break;
+            }
+        }
+    }
+}
+impl Client {
     async fn handle_response(&mut self, request: Request) {
         let response = self.client.execute(request).await;
         match response {
@@ -102,19 +117,6 @@ impl Client {
                 self.lua.response(status, headers, body).unwrap();
             }
             Err(_) => {}
-        }
-    }
-    pub async fn client_loop(mut self, args: Arc<CommandLineArgs>, end_time: Instant) {
-        loop {
-            // Request and response
-            let request = self.make_request(args.as_ref()).unwrap();
-            self.handle_response(request).await;
-            // Release delay
-            self.lua.delay().unwrap();
-            // At end time we end the procedure
-            if Instant::now() >= end_time {
-                break;
-            }
         }
     }
 }
