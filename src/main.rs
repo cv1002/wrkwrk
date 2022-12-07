@@ -7,6 +7,7 @@ use std::{
         atomic::{AtomicUsize, Ordering},
         Arc,
     },
+    thread,
 };
 // External Mods
 use clap::{command, Parser};
@@ -80,43 +81,42 @@ pub struct CommandLineArgs {
 }
 
 fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>> {
+    let mut id = 0;
+    let end_time = Instant::now() + Duration::from_secs(args.duration as u64);
     // Send messages to server
     let handler = |_| {
-        // Create some data structure for later use
-        let id = AtomicUsize::new(0);
-        let end_time = Instant::now() + Duration::from_secs(args.duration as u64);
-
-        // Build clients
         std::thread::spawn({
             // Sharing some datastructures
             let args = args.clone();
+            // Create tokio runtime for later use
+            let runtime = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
+
             // Main client loop
             move || {
-                // Create tokio runtime for later use
-                let runtime = tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .unwrap();
                 // Each thread should create a lua virtual machine
                 let lua_vm = Arc::new(WrkLuaVM::new(args.as_ref()).unwrap());
                 // Each connection create a coroutine
                 runtime.block_on(async {
                     for _ in 0..(args.connections / args.threads) {
-                        Client::new(id.load(Ordering::SeqCst), lua_vm.clone())
+                        Client::new(id, lua_vm.clone())
                             .unwrap()
                             .client_loop(&runtime, args.clone(), end_time);
-                        id.fetch_add(1, Ordering::SeqCst);
+                        id += 1;
                     }
                 });
             }
         })
     };
-
-    vec![(); args.threads as usize]
+    let results = vec![(); args.threads as usize]
         .into_iter()
         .map(handler)
         .map(|handle| handle.join())
-        .collect::<Vec<_>>()
+        .collect::<Vec<_>>();
+
+    results
 }
 
 fn main() {
