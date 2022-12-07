@@ -11,11 +11,9 @@ pub mod httprequest;
 use crate::{lua::WrkLuaVM, util::transform::Transformation, CommandLineArgs};
 
 pub struct Client {
-    pub id: usize,
-    pub lua: Arc<WrkLuaVM>,
-    pub client: reqwest::Client,
-    // Prevent from constructed by other module
-    __private: (),
+    id: usize,
+    lua: Arc<WrkLuaVM>,
+    client: reqwest::Client,
 }
 unsafe impl Send for Client {}
 unsafe impl Sync for Client {}
@@ -23,12 +21,7 @@ unsafe impl Sync for Client {}
 impl Client {
     pub fn new(id: usize, lua: Arc<WrkLuaVM>) -> Result<Self, mlua::Error> {
         let client = reqwest::Client::new();
-        Ok(Self {
-            id,
-            lua,
-            client,
-            __private: (),
-        })
+        Ok(Self { id, lua, client })
     }
     pub async fn client_loop(mut self, args: Arc<CommandLineArgs>, end_time: Instant) {
         loop {
