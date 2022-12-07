@@ -1,7 +1,13 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 // Standard Mods
-use std::{any::Any, sync::Arc};
+use std::{
+    any::Any,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
+};
 // External Mods
 use clap::{command, Parser};
 use client::Client;
@@ -77,6 +83,7 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
     let end_time = Instant::now() + Duration::from_secs(args.duration as u64);
     // Send messages to server
     let handler = |_| {
+        let id = AtomicUsize::new(0);
         std::thread::spawn({
             // Sharing some datastructures
             let args = args.clone();
@@ -91,12 +98,13 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
                 let lua_vm = Arc::new(WrkLuaVM::new(args.as_ref()).unwrap());
                 // Each connection create a coroutine
                 runtime.block_on(async {
-                    for id in 0..(args.connections / args.threads) {
+                    for _ in 0..(args.connections / args.threads) {
                         runtime.spawn(
-                            Client::new(id, lua_vm.clone())
+                            Client::new(id.load(Ordering::SeqCst), lua_vm.clone())
                                 .unwrap()
                                 .client_loop(args.clone(), end_time),
                         );
+                        id.fetch_add(1, Ordering::SeqCst);
                     }
                 });
             }
