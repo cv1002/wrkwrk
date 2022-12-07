@@ -14,6 +14,8 @@ pub struct Client {
     pub id: usize,
     pub lua: Arc<WrkLuaVM>,
     pub client: reqwest::Client,
+    // Prevent from constructed by other module
+    __private: (),
 }
 unsafe impl Send for Client {}
 unsafe impl Sync for Client {}
@@ -21,9 +23,48 @@ unsafe impl Sync for Client {}
 impl Client {
     pub fn new(id: usize, lua: Arc<WrkLuaVM>) -> Result<Self, mlua::Error> {
         let client = reqwest::Client::new();
-        Ok(Self { id, lua, client })
+        Ok(Self {
+            id,
+            lua,
+            client,
+            __private: (),
+        })
     }
-    pub fn make_request(&mut self, args: &CommandLineArgs) -> Result<Request, mlua::Error> {
+    pub async fn client_loop(mut self, args: Arc<CommandLineArgs>, end_time: Instant) {
+        loop {
+            // Request and response
+            let request = self.make_request(args.as_ref()).unwrap();
+            self.handle_response(request).await;
+            // Release delay
+            self.lua.delay().unwrap();
+            // At end time we end the procedure
+            if Instant::now() >= end_time {
+                break;
+            }
+        }
+    }
+}
+// Private methods
+impl Client {
+    async fn handle_response(&mut self, request: Request) {
+        let response = self.client.execute(request).await;
+        if let Ok(resp) = response {
+            // Get some response information
+            let status = resp.status().as_u16();
+            let headers = resp
+                .headers()
+                .iter()
+                .map(|(key, value)| (key.to_string(), value.to_str().unwrap().to_string()))
+                .collect::<HashMap<String, String>>();
+            let body = resp.bytes().await.into_iter().fold(Vec::new(), |x, y| {
+                x.into_iter().chain(y.into_iter()).collect()
+            });
+            // Handle response function in script, if response is nil, skip
+            let _ = self.lua.response(status, headers, body);
+        }
+    }
+
+    fn make_request(&mut self, args: &CommandLineArgs) -> Result<Request, mlua::Error> {
         let request = httprequest::HttpRequest::get_request(self.lua.get_vm()).unwrap();
 
         let method = match request.method.as_str() {
@@ -79,37 +120,5 @@ impl Client {
             .version(version)
             .build()
             .unwrap())
-    }
-    pub async fn client_loop(mut self, args: Arc<CommandLineArgs>, end_time: Instant) {
-        loop {
-            // Request and response
-            let request = self.make_request(args.as_ref()).unwrap();
-            self.handle_response(request).await;
-            // Release delay
-            self.lua.delay().unwrap();
-            // At end time we end the procedure
-            if Instant::now() >= end_time {
-                break;
-            }
-        }
-    }
-}
-impl Client {
-    async fn handle_response(&mut self, request: Request) {
-        let response = self.client.execute(request).await;
-        if let Ok(resp) = response {
-            // Get some response information
-            let status = resp.status().as_u16();
-            let headers = resp
-                .headers()
-                .iter()
-                .map(|(key, value)| (key.to_string(), value.to_str().unwrap().to_string()))
-                .collect::<HashMap<String, String>>();
-            let body = resp.bytes().await.into_iter().fold(Vec::new(), |x, y| {
-                x.into_iter().chain(y.into_iter()).collect()
-            });
-            // Handle response function in script, if response is nil, skip
-            let _ = self.lua.response(status, headers, body);
-        }
     }
 }

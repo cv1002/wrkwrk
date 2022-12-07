@@ -7,8 +7,6 @@ use crate::CommandLineArgs;
 
 pub struct WrkLuaVM {
     lua: Lua,
-
-    __private: (),
 }
 // Public fns
 impl WrkLuaVM {
@@ -16,7 +14,6 @@ impl WrkLuaVM {
         // Build object
         let object = Self {
             lua: mlua::Lua::new(),
-            __private: (),
         };
         // Load wrk scripts and do setup.
         object.lua.load(include_str!("wrk.lua")).exec()?;
