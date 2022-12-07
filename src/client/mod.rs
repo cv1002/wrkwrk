@@ -2,7 +2,7 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 // External Mods
 use reqwest::{
-    header::{HeaderMap, HeaderName, HeaderValue},
+    header::{HeaderName, HeaderValue},
     Request, Version,
 };
 use tokio::time::Instant;
