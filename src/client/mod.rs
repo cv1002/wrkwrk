@@ -113,7 +113,8 @@ impl Client {
                 let body = resp.bytes().await.into_iter().fold(Vec::new(), |x, y| {
                     x.into_iter().chain(y.into_iter()).collect()
                 });
-                self.lua.response(status, headers, body).unwrap();
+                // Handle response function in script, if response is nil, skip
+                let _ = self.lua.response(status, headers, body);
             }
             Err(_) => {}
         }
