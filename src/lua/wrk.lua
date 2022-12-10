@@ -69,7 +69,7 @@ end
 function request()
   return wrk.format(
     "https",
-    "www.qq.com",
+    "www.youtube.com",
     443,
     "GET",
     "",

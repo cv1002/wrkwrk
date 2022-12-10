@@ -63,9 +63,7 @@ impl Client {
                 // Handle response function in script, if response is nil, skip
                 let _ = self.lua.response(status, headers, body);
             }
-            Err(err) => {
-                dbg!(err);
-            }
+            Err(_) => {}
         }
     }
 
