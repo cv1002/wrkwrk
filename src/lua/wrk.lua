@@ -39,10 +39,12 @@ function wrk.init(args)
 end
 
 function wrk.format(scheme, host, port, method, url, headers, body, timeout, version)
-  if headers ~= nil and not headers["Host"] then
-    headers["Host"] = wrk.headers["Host"]
+  local host    = host or wrk.host
+  if headers ~= nil then
+    if not headers["Host"] then
+      headers["Host"] = host
+    end
   end
-  local host    = host or headers["Host"]
 
   local scheme  = scheme or wrk.scheme
   local port    = port or wrk.port
