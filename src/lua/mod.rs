@@ -19,12 +19,6 @@ impl WrkLuaVM {
         object.lua.load(include_str!("wrk.lua")).exec()?;
         object.setup()?;
         object.init(args)?;
-        // If commandline arguments have script, then run this script file
-        let _ = args
-            .script
-            .as_deref()
-            .map(|script| object.lua.load(script).exec())
-            .transpose()?;
 
         Ok(object)
     }
@@ -51,6 +45,13 @@ impl WrkLuaVM {
         self.lua.load("wrk.setup()").exec()
     }
     fn init(&self, args: &CommandLineArgs) -> Result<(), mlua::Error> {
+        // If commandline arguments have script, then run this script file
+        let _ = args
+        .script
+        .as_deref()
+        .map(|script| self.lua.load(script).exec())
+        .transpose()?;
+        // Call init function
         let init: Function = self.lua.globals().get("init")?;
         init.call(self.lua.to_value(args))
     }
