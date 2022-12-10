@@ -8,7 +8,7 @@ wrk = {
   body    = nil,
   thread  = nil,
   timeout = 30000,
-  version = "HTTP2",
+  version = "HTTP1.1",
 }
 
 function wrk.setup(thread)
