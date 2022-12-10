@@ -40,12 +40,6 @@ end
 
 function wrk.format(scheme, host, port, method, url, headers, body, timeout, version)
   local host    = host or wrk.host
-  if headers ~= nil then
-    if not headers["Host"] then
-      headers["Host"] = host
-    end
-  end
-
   local scheme  = scheme or wrk.scheme
   local port    = port or wrk.port
   local method  = method or wrk.method
@@ -54,6 +48,12 @@ function wrk.format(scheme, host, port, method, url, headers, body, timeout, ver
   local body    = body or wrk.body
   local timeout = timeout or wrk.timeout
   local version = version or wrk.version
+
+  if headers ~= nil then
+    if not headers["Host"] then
+      headers["Host"] = host
+    end
+  end
 
   return {
     scheme  = scheme,
