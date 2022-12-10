@@ -48,7 +48,7 @@ impl WrkLuaVM {
         todo!()
     }
     fn setup(&self) -> Result<(), mlua::Error> {
-        self.lua.load("setup()").exec()
+        self.lua.load("wrk.setup()").exec()
     }
     fn init(&self, args: &CommandLineArgs) -> Result<(), mlua::Error> {
         let init: Function = self.lua.globals().get("init")?;

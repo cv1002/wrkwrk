@@ -1,9 +1,9 @@
-local wrk = {
+wrk = {
   scheme  = "http",
   host    = "localhost",
-  port    = nil,
+  port    = 80,
   method  = "GET",
-  path    = "/",
+  path    = "",
   headers = {},
   body    = nil,
   thread  = nil,
@@ -38,12 +38,13 @@ function wrk.init(args)
   end
 end
 
-function wrk.format(host, port, method, url, headers, body, timeout, version)
-  if not headers["Host"] then
+function wrk.format(scheme, host, port, method, url, headers, body, timeout, version)
+  if headers ~= nil and not headers["Host"] then
     headers["Host"] = wrk.headers["Host"]
   end
-
   local host    = host or headers["Host"]
+
+  local scheme  = scheme or wrk.scheme
   local port    = port or wrk.port
   local method  = method or wrk.method
   local url     = url or wrk.path
@@ -53,6 +54,7 @@ function wrk.format(host, port, method, url, headers, body, timeout, version)
   local version = version or wrk.version
 
   return {
+    scheme  = scheme,
     host    = host,
     port    = port,
     method  = method,
@@ -64,4 +66,19 @@ function wrk.format(host, port, method, url, headers, body, timeout, version)
   }
 end
 
-return wrk
+function request()
+  return wrk.format(
+    "http",
+    "www.qq.com",
+    80,
+    "GET",
+    "",
+    nil,
+    nil,
+    nil,
+    nil
+  )
+end
+
+function init()
+end

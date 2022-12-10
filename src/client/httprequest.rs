@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct HttpRequest {
+    pub scheme: String,
     pub host: String,
     pub port: u32,
     pub method: String,

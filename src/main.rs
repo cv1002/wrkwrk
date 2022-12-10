@@ -26,9 +26,6 @@ It combines a multithreaded design with scalable event notification systems such
     about = about
 )]
 pub struct CommandLineArgs {
-    #[arg(long)]
-    pub url: String,
-
     #[arg(
         short,
         long,
@@ -63,6 +60,9 @@ pub struct CommandLineArgs {
     #[arg(long, help = "Use http3")]
     pub http3: bool,
 
+    #[arg(long)]
+    pub url: Option<String>,
+
     #[arg(short, long, id = "ScriptPath", help = "Load Lua script file")]
     pub script: Option<String>,
 
@@ -74,7 +74,7 @@ pub struct CommandLineArgs {
 }
 
 fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>> {
-    let mut id = 0;
+    let mut tid = 0;
     let end_time = Instant::now() + Duration::from_secs(args.duration as u64);
     // Send messages to server
     let handler = |_| {
@@ -93,13 +93,16 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
                 let lua_vm = Arc::new(WrkLuaVM::new(args.as_ref()).unwrap());
                 // Each connection create a coroutine
                 runtime.block_on(async {
-                    for _ in 0..(args.connections / args.threads) {
-                        Client::new(id, lua_vm.clone()).unwrap().client_loop(
+                    let vec = (0..(args.connections / args.threads)).map(|cid| {
+                        tid += 1;
+                        Client::new((tid, cid), lua_vm.clone()).unwrap().client_loop(
                             &runtime,
                             args.clone(),
                             end_time,
-                        );
-                        id += 1;
+                        )
+                    }).collect::<Vec<_>>().into_iter();
+                    for joinhandle in vec {
+                        let _ = joinhandle.await;
                     }
                 });
             }
