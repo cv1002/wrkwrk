@@ -93,14 +93,15 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
                 let lua_vm = Arc::new(WrkLuaVM::new(args.as_ref()).unwrap());
                 // Each connection create a coroutine
                 runtime.block_on(async {
-                    let vec = (0..(args.connections / args.threads)).map(|cid| {
-                        tid += 1;
-                        Client::new((tid, cid), lua_vm.clone()).unwrap().client_loop(
-                            &runtime,
-                            args.clone(),
-                            end_time,
-                        )
-                    }).collect::<Vec<_>>().into_iter();
+                    let vec = (0..(args.connections / args.threads))
+                        .map(|cid| {
+                            tid += 1;
+                            Client::new((tid, cid), lua_vm.clone())
+                                .unwrap()
+                                .client_loop(&runtime, args.clone(), end_time)
+                        })
+                        .collect::<Vec<_>>()
+                        .into_iter();
                     for joinhandle in vec {
                         let _ = joinhandle.await;
                     }

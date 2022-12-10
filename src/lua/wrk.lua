@@ -68,9 +68,9 @@ end
 
 function request()
   return wrk.format(
-    "http",
+    "https",
     "www.qq.com",
-    80,
+    443,
     "GET",
     "",
     nil,
