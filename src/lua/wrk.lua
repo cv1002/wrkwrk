@@ -67,17 +67,7 @@ function wrk.format(scheme, host, port, method, url, headers, body, timeout, ver
 end
 
 function request()
-  return wrk.format(
-    "https",
-    "www.youtube.com",
-    443,
-    "GET",
-    "",
-    nil,
-    nil,
-    nil,
-    nil
-  )
+  return wrk.format()
 end
 
 function init()
