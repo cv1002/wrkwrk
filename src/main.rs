@@ -119,19 +119,3 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
 fn main() {
     let _ = procedure(Arc::new(CommandLineArgs::parse()));
 }
-
-// let client = reqwest::ClientBuilder::new()
-//   .danger_accept_invalid_certs(true)
-//   .https_only(true)
-//   .http2_prior_knowledge()
-//   .use_rustls_tls()
-//   .build()
-//   .unwrap();
-// let request = client
-//   .request(reqwest::Method::GET, "http://localhost:4173/")
-//   .version(reqwest::Version::HTTP_2)
-//   .build()
-//   .unwrap();
-// let response = client.execute(request).await.unwrap();
-// let response = dbg!(response);
-// dbg!(response.version());
