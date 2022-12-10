@@ -105,7 +105,7 @@ impl Client {
             "HTTP1.1" => Version::HTTP_11,
             "HTTP2" => Version::HTTP_2,
             "HTTP3" => Version::HTTP_3,
-            // If nothing, use http2
+            // If nothing, use http1.1
             _ => Version::HTTP_11,
         };
         Ok(self
