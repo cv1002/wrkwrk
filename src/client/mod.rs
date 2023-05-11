@@ -1,5 +1,9 @@
 // Standard Mods
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::Arc,
+    time::{Duration, SystemTime},
+};
 // External Mods
 use reqwest::{
     header::{HeaderName, HeaderValue},
@@ -8,7 +12,7 @@ use reqwest::{
 use tokio::{runtime::Runtime, task::JoinHandle, time::Instant};
 // Internal Mods
 pub mod httprequest;
-use crate::{lua::WrkLuaVM, util::transform::Transformation, CommandLineArgs};
+use crate::{lua::WrkLuaVM, summary, util::transform::Transformation, CommandLineArgs};
 
 pub struct Client {
     id: (usize, usize),
@@ -32,8 +36,12 @@ impl Client {
         runtime.spawn(async move {
             loop {
                 // Request and response
+                let start = SystemTime::now();
                 let request = self.make_request(args.as_ref()).unwrap();
                 self.handle_response(request).await;
+                let duration = SystemTime::now().duration_since(start).unwrap().as_nanos() as u64;
+                summary::count_request();
+                summary::add_latency(duration);
                 // Release delay
                 let _ = self.lua.delay();
                 // At end time we end the procedure

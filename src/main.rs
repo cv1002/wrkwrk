@@ -92,7 +92,7 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
                 // Each thread should create a lua virtual machine
                 let lua_vm = Arc::new(WrkLuaVM::new(args.as_ref()).unwrap());
                 // Each connection create a coroutine
-                runtime.block_on(async {
+                let worker = async {
                     let vec = (0..(args.connections / args.threads))
                         .map(|cid| {
                             tid += 1;
@@ -105,15 +105,25 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
                     for joinhandle in vec {
                         let _ = joinhandle.await;
                     }
-                });
+                };
+                runtime.block_on(worker);
             }
         })
     };
-    vec![(); args.threads as usize]
+    let result = vec![(); args.threads as usize]
         .into_iter()
         .map(handler)
         .map(|handle| handle.join())
-        .collect::<Vec<_>>()
+        .collect::<Vec<_>>();
+    println!(
+        "Running {} test; {} threads and {} connections; latency avg {}; total requests {}",
+        args.duration,
+        args.threads,
+        args.connections,
+        summary::avg_latency(),
+        summary::total_request(),
+    );
+    result
 }
 
 fn main() {

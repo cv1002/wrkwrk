@@ -1541,7 +1541,6 @@ version = "0.2.0"
 dependencies = [
  "async-oncecell",
  "clap",
- "libc",
  "mlua",
  "once_cell",
  "reqwest",
