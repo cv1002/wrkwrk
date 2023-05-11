@@ -39,7 +39,7 @@ impl Client {
                 let start = SystemTime::now();
                 let request = self.make_request(args.as_ref()).unwrap();
                 self.handle_response(request).await;
-                let duration = SystemTime::now().duration_since(start).unwrap().as_nanos() as u64;
+                let duration = SystemTime::now().duration_since(start).unwrap().as_millis() as u64;
                 summary::count_request();
                 summary::add_latency(duration);
                 // Release delay

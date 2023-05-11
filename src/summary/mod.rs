@@ -22,3 +22,7 @@ pub fn avg_latency() -> f64 {
 pub fn total_request() -> u64 {
     REQUEST_COUNT.load(SeqCst)
 }
+
+pub fn max_latency() -> u64 {
+    MAX_LATENCY.load(SeqCst)
+}

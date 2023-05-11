@@ -35,7 +35,7 @@ pub struct CommandLineArgs {
     pub connections: usize,
 
     #[arg(short, long, id = "Seconds", help = "Duration of test")]
-    pub duration: usize,
+    pub duration: u64,
 
     #[arg(short, long, id = "ThreadsAmount", help = "Number of threads to use")]
     pub threads: usize,
@@ -75,7 +75,7 @@ pub struct CommandLineArgs {
 
 fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>> {
     let mut tid = 0;
-    let end_time = Instant::now() + Duration::from_secs(args.duration as u64);
+    let end_time = Instant::now() + Duration::from_secs(args.duration);
     // Send messages to server
     let handler = |_| {
         std::thread::spawn({
@@ -116,13 +116,14 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
         .map(|handle| handle.join())
         .collect::<Vec<_>>();
     println!(
-        "Running {}s test; {} threads and {} connections; latency avg {} ns; total requests {}; avg requests {}/s",
+        "Running {}s test; {} threads and {} connections; latency avg {:.3} us; total requests {}; avg requests {}/s; max latency {}us",
         args.duration,
         args.threads,
         args.connections,
         summary::avg_latency(),
         summary::total_request(),
-        summary::total_request() / args.duration as u64,
+        summary::total_request() / args.duration,
+        summary::max_latency(),
     );
     result
 }
