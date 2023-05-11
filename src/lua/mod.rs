@@ -47,10 +47,11 @@ impl WrkLuaVM {
     fn init(&self, args: &CommandLineArgs) -> Result<(), mlua::Error> {
         // If commandline arguments have script, then run this script file
         let _ = args
-        .script
-        .as_deref()
-        .map(|script| self.lua.load(script).exec())
-        .transpose()?;
+            .script
+            .as_deref()
+            .map(|script| std::fs::read_to_string(script).unwrap())
+            .map(|script| self.lua.load(&script).exec())
+            .transpose()?;
         // Call init function
         let init: Function = self.lua.globals().get("init")?;
         init.call(self.lua.to_value(args))
