@@ -116,7 +116,7 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
         .map(|handle| handle.join())
         .collect::<Vec<_>>();
     println!(
-        "Running {} test; {} threads and {} connections; latency avg {} ns; total requests {}; avg requests {}/s",
+        "Running {}s test; {} threads and {} connections; latency avg {} ns; total requests {}; avg requests {}/s",
         args.duration,
         args.threads,
         args.connections,
