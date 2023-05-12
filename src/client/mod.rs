@@ -15,12 +15,14 @@ pub mod httprequest;
 use crate::{
     lua::WrkLuaVM, summary::SummaryUnit, util::transform::Transformation, CommandLineArgs,
 };
+use self::httprequest::HttpRequest;
 
 pub struct Client {
     id: (usize, usize),
     lua: Arc<WrkLuaVM>,
     client: reqwest::Client,
     summary: SummaryUnit,
+    request: HttpRequest
 }
 unsafe impl Send for Client {}
 unsafe impl Sync for Client {}
@@ -29,11 +31,13 @@ impl Client {
     pub fn new(id: (usize, usize), lua: Arc<WrkLuaVM>) -> Result<Self, mlua::Error> {
         let client = reqwest::Client::new();
         let summary = SummaryUnit::new();
+        let request = httprequest::HttpRequest::get_request(lua.get_vm()).unwrap();
         Ok(Self {
             id,
             lua,
             client,
             summary,
+            request,
         })
     }
     pub fn client_loop(
@@ -86,7 +90,7 @@ impl Client {
     }
 
     fn make_request(&mut self, args: &CommandLineArgs) -> Result<Request, mlua::Error> {
-        let request = httprequest::HttpRequest::get_request(self.lua.get_vm()).unwrap();
+        let request = self.request.clone();
 
         let method = match request.method.as_str() {
             "GET" => reqwest::Method::GET,
