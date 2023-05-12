@@ -95,13 +95,15 @@ impl Client {
             "PUT" => reqwest::Method::PUT,
             _ => unimplemented!(),
         };
-        let url = format!(
-            "{}://{}:{}/{}",
-            request.scheme,
-            request.host,
-            request.port,
-            request.url.strip_prefix("/").unwrap_or(&request.url)
-        );
+        let url = {
+            args.url.clone().unwrap_or(format!(
+                "{}://{}:{}/{}",
+                request.scheme,
+                request.host,
+                request.port,
+                request.url.strip_prefix("/").unwrap_or(&request.url)
+            ))
+        };
         let headers = {
             request
                 .headers
