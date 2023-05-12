@@ -22,7 +22,7 @@ pub struct Client {
     lua: Arc<WrkLuaVM>,
     client: reqwest::Client,
     summary: SummaryUnit,
-    request: HttpRequest
+    request: HttpRequest,
 }
 unsafe impl Send for Client {}
 unsafe impl Sync for Client {}
