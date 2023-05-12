@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 // Standard Mods
-use std::{any::Any, sync::Arc};
+use std::sync::Arc;
 // External Mods
 use clap::{command, Parser};
 use client::Client;
@@ -13,6 +13,7 @@ mod lua;
 mod summary;
 mod util;
 use lua::WrkLuaVM;
+use summary::SummaryUnit;
 
 const about: &str = r#"
 wrk is a modern HTTP benchmarking tool capable of generating significant load when run on a single multi-core CPU.
@@ -73,7 +74,7 @@ pub struct CommandLineArgs {
     pub timeout: Option<u32>,
 }
 
-fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>> {
+fn procedure(args: Arc<CommandLineArgs>) {
     let mut tid = 0;
     let end_time = Instant::now() + Duration::from_secs(args.duration);
     // Send messages to server
@@ -93,41 +94,42 @@ fn procedure(args: Arc<CommandLineArgs>) -> Vec<Result<(), Box<dyn Any + Send>>>
                 let lua_vm = Arc::new(WrkLuaVM::new(args.as_ref()).unwrap());
                 // Each connection create a coroutine
                 let worker = async {
-                    let vec = (0..(args.connections / args.threads))
+                    let clients = (0..(args.connections / args.threads))
                         .map(|cid| {
                             tid += 1;
                             Client::new((tid, cid), lua_vm.clone())
                                 .unwrap()
                                 .client_loop(&runtime, args.clone(), end_time)
                         })
-                        .collect::<Vec<_>>()
-                        .into_iter();
-                    for joinhandle in vec {
-                        let _ = joinhandle.await;
+                        .collect::<Vec<_>>();
+                    let mut summaryunits = vec![];
+                    for client in clients {
+                        summaryunits.push(client.await.unwrap());
                     }
+                    summaryunits
                 };
-                runtime.block_on(worker);
+                runtime.block_on(worker)
             }
         })
     };
     let result = vec![(); args.threads as usize]
         .into_iter()
         .map(handler)
-        .map(|handle| handle.join())
-        .collect::<Vec<_>>();
+        .map(|handle| handle.join().unwrap())
+        .flat_map(|units| units.into_iter())
+        .fold(SummaryUnit::new(), SummaryUnit::merge);
     println!(
         "Running {}s test; {} threads and {} connections; latency avg {:.3} us; total requests {}; avg requests {}/s; max latency {}us",
         args.duration,
         args.threads,
         args.connections,
-        summary::avg_latency(),
-        summary::total_request(),
-        summary::total_request() / args.duration,
-        summary::max_latency(),
+        result.avg_latency(),
+        result.total_request(),
+        result.total_request() / args.duration,
+        result.max_latency(),
     );
-    result
 }
 
 fn main() {
-    let _ = procedure(Arc::new(CommandLineArgs::parse()));
+    procedure(Arc::new(CommandLineArgs::parse()));
 }

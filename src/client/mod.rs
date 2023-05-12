@@ -12,12 +12,15 @@ use reqwest::{
 use tokio::{runtime::Runtime, task::JoinHandle, time::Instant};
 // Internal Mods
 pub mod httprequest;
-use crate::{lua::WrkLuaVM, summary, util::transform::Transformation, CommandLineArgs};
+use crate::{
+    lua::WrkLuaVM, summary::SummaryUnit, util::transform::Transformation, CommandLineArgs,
+};
 
 pub struct Client {
     id: (usize, usize),
     lua: Arc<WrkLuaVM>,
     client: reqwest::Client,
+    summary: SummaryUnit,
 }
 unsafe impl Send for Client {}
 unsafe impl Sync for Client {}
@@ -25,14 +28,20 @@ unsafe impl Sync for Client {}
 impl Client {
     pub fn new(id: (usize, usize), lua: Arc<WrkLuaVM>) -> Result<Self, mlua::Error> {
         let client = reqwest::Client::new();
-        Ok(Self { id, lua, client })
+        let summary = SummaryUnit::new();
+        Ok(Self {
+            id,
+            lua,
+            client,
+            summary,
+        })
     }
     pub fn client_loop(
         mut self,
         runtime: &Runtime,
         args: Arc<CommandLineArgs>,
         end_time: Instant,
-    ) -> JoinHandle<()> {
+    ) -> JoinHandle<SummaryUnit> {
         runtime.spawn(async move {
             loop {
                 // Request and response
@@ -40,8 +49,8 @@ impl Client {
                 let request = self.make_request(args.as_ref()).unwrap();
                 self.handle_response(request).await;
                 let duration = SystemTime::now().duration_since(start).unwrap().as_millis() as u64;
-                summary::count_request();
-                summary::add_latency(duration);
+                self.summary.count_request();
+                self.summary.add_latency(duration);
                 // Release delay
                 let _ = self.lua.delay();
                 // At end time we end the procedure
@@ -49,6 +58,7 @@ impl Client {
                     break;
                 }
             }
+            self.summary
         })
     }
 }
@@ -87,7 +97,10 @@ impl Client {
         };
         let url = format!(
             "{}://{}:{}/{}",
-            request.scheme, request.host, request.port, request.url
+            request.scheme,
+            request.host,
+            request.port,
+            request.url.strip_prefix("/").unwrap_or(&request.url)
         );
         let headers = {
             request
