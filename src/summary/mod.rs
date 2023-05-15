@@ -23,6 +23,9 @@ impl SummaryUnit {
     pub fn avg_latency(&self) -> f64 {
         self.total_latency as f64 / self.request_count as f64
     }
+    pub fn total_latency(&self) -> u64 {
+        self.total_latency
+    }
     pub fn total_request(&self) -> u64 {
         self.request_count
     }

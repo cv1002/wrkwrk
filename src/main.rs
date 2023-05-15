@@ -128,6 +128,10 @@ fn procedure(args: Arc<CommandLineArgs>) {
         result.total_request() / args.duration,
         result.max_latency(),
     );
+    // Release done
+    let _ = WrkLuaVM::new(args.as_ref())
+        .unwrap()
+        .done(result.total_latency(), result.total_request());
 }
 
 fn main() {
