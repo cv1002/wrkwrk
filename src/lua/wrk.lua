@@ -6,14 +6,13 @@ wrk = {
   path    = "",
   headers = {},
   body    = nil,
-  thread  = nil,
   timeout = 30000,
   version = "HTTP1.1",
 }
 
-function wrk.setup(thread)
+function wrk.setup()
   if type(setup) == "function" then
-    setup(thread)
+    setup()
   end
 end
 
@@ -70,7 +69,4 @@ end
 
 function request()
   return wrk.format()
-end
-
-function init()
 end
