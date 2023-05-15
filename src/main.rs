@@ -112,12 +112,14 @@ fn procedure(args: Arc<CommandLineArgs>) {
             }
         })
     };
+    // Collect summaryunit
     let result = vec![(); args.threads as usize]
         .into_iter()
         .map(handler)
         .map(|handle| handle.join().unwrap())
         .flat_map(|units| units.into_iter())
         .fold(SummaryUnit::new(), SummaryUnit::merge);
+    // Print some message
     println!(
         "Running {}s test; {} threads and {} connections; latency avg {:.3} us; total requests {}; avg requests {}/s; max latency {}us",
         args.duration,
