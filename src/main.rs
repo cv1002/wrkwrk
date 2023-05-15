@@ -89,13 +89,12 @@ fn procedure(args: Arc<CommandLineArgs>) {
             }
         };
 
-        // Main client loop
-        // Each connection create a coroutine
+        // Each connection create a client, and a coroutine
         let worker = async {
             let clients = (0..args.connections)
-                .map(|cid| {
+                .map(|_| {
                     tid += 1;
-                    Client::new((tid, cid), WrkLuaVM::new(args.as_ref()).unwrap())
+                    Client::new(WrkLuaVM::new(args.as_ref()).unwrap())
                         .unwrap()
                         .client_loop(&runtime, args.clone(), end_time)
                 })

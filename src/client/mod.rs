@@ -17,7 +17,6 @@ use crate::{
 };
 
 pub struct Client {
-    id: (usize, usize),
     lua: WrkLuaVM,
     client: reqwest::Client,
     summary: SummaryUnit,
@@ -26,11 +25,10 @@ unsafe impl Send for Client {}
 unsafe impl Sync for Client {}
 
 impl Client {
-    pub fn new(id: (usize, usize), lua: WrkLuaVM) -> Result<Self, mlua::Error> {
+    pub fn new(lua: WrkLuaVM) -> Result<Self, mlua::Error> {
         let client = reqwest::Client::new();
         let summary = SummaryUnit::new();
         Ok(Self {
-            id,
             lua,
             client,
             summary,
