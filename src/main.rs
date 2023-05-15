@@ -67,7 +67,6 @@ pub struct CommandLineArgs {
 }
 
 fn procedure(args: Arc<CommandLineArgs>) {
-    let mut tid = 0;
     let end_time = Instant::now() + Duration::from_secs(args.duration);
     // Send messages to server
     let handler = {
@@ -93,7 +92,6 @@ fn procedure(args: Arc<CommandLineArgs>) {
         let worker = async {
             let clients = (0..args.connections)
                 .map(|_| {
-                    tid += 1;
                     Client::new(WrkLuaVM::new(args.as_ref()).unwrap())
                         .unwrap()
                         .client_loop(&runtime, args.clone(), end_time)
