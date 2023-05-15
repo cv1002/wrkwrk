@@ -100,7 +100,7 @@ fn procedure(args: Arc<CommandLineArgs>) {
                         .client_loop(&runtime, args.clone(), end_time)
                 })
                 .collect::<Vec<_>>();
-            let mut summaryunits = vec![];
+            let mut summaryunits = Vec::with_capacity(clients.len());
             for client in clients {
                 summaryunits.push(client.await.unwrap());
             }
