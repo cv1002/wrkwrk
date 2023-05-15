@@ -78,46 +78,47 @@ fn procedure(args: Arc<CommandLineArgs>) {
     let mut tid = 0;
     let end_time = Instant::now() + Duration::from_secs(args.duration);
     // Send messages to server
-    let handler = |_| {
-        std::thread::spawn({
-            // Sharing some datastructures
-            let args = args.clone();
-            // Create tokio runtime for later use
-            let runtime = tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .unwrap();
-
-            // Main client loop
-            move || {
-                // Each thread should create a lua virtual machine
-                let lua_vm = Arc::new(WrkLuaVM::new(args.as_ref()).unwrap());
-                // Each connection create a coroutine
-                let worker = async {
-                    let clients = (0..(args.connections / args.threads))
-                        .map(|cid| {
-                            tid += 1;
-                            Client::new((tid, cid), lua_vm.clone())
-                                .unwrap()
-                                .client_loop(&runtime, args.clone(), end_time)
-                        })
-                        .collect::<Vec<_>>();
-                    let mut summaryunits = vec![];
-                    for client in clients {
-                        summaryunits.push(client.await.unwrap());
-                    }
-                    summaryunits
-                };
-                runtime.block_on(worker)
+    let handler = {
+        // Sharing some datastructures
+        let args = args.clone();
+        // Create tokio runtime for later use
+        let runtime = {
+            if args.threads == 1 {
+                tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap()
+            } else {
+                tokio::runtime::Builder::new_multi_thread()
+                    .worker_threads(args.threads)
+                    .enable_all()
+                    .build()
+                    .unwrap()
             }
-        })
+        };
+
+        // Main client loop
+        // Each connection create a coroutine
+        let worker = async {
+            let clients = (0..args.connections)
+                .map(|cid| {
+                    tid += 1;
+                    Client::new((tid, cid), WrkLuaVM::new(args.as_ref()).unwrap())
+                        .unwrap()
+                        .client_loop(&runtime, args.clone(), end_time)
+                })
+                .collect::<Vec<_>>();
+            let mut summaryunits = vec![];
+            for client in clients {
+                summaryunits.push(client.await.unwrap());
+            }
+            summaryunits
+        };
+        runtime.block_on(worker)
     };
     // Collect summaryunit
-    let result = vec![(); args.threads as usize]
+    let result = handler
         .into_iter()
-        .map(handler)
-        .map(|handle| handle.join().unwrap())
-        .flat_map(|units| units.into_iter())
         .fold(SummaryUnit::new(), SummaryUnit::merge);
     // Print some message
     println!(
