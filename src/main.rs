@@ -41,14 +41,6 @@ pub struct CommandLineArgs {
     #[arg(short, long, id = "ThreadsAmount", help = "Number of threads to use")]
     pub threads: usize,
 
-    #[arg(
-        short,
-        long,
-        default_value = "false",
-        help = "Print latency statistics"
-    )]
-    pub latency: bool,
-
     #[arg(long, help = "Use http1.0")]
     pub http10: bool,
 
