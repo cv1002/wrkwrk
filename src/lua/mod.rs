@@ -17,7 +17,6 @@ impl WrkLuaVM {
         };
         // Load wrk scripts and do setup.
         object.lua.load(include_str!("wrk.lua")).exec()?;
-        object.setup()?;
         object.init(args)?;
 
         Ok(object)
@@ -38,11 +37,9 @@ impl WrkLuaVM {
         let response: Function = self.lua.globals().get("response")?;
         response.call((status, headers, body))
     }
-    pub fn done(&self, _summary: (), _latency: (), _requests: ()) {
-        todo!()
-    }
-    fn setup(&self) -> Result<(), mlua::Error> {
-        self.lua.load("wrk.setup()").exec()
+    pub fn done(&self, latency: u64, requests: u64) -> Result<(), mlua::Error> {
+        let done: Function = self.lua.globals().get("done")?;
+        done.call((latency, requests))
     }
     fn init(&self, args: &CommandLineArgs) -> Result<(), mlua::Error> {
         // If commandline arguments have script, then run this script file

@@ -10,34 +10,7 @@ wrk = {
   version = "HTTP1.1",
 }
 
-function wrk.setup()
-  if type(setup) == "function" then
-    setup()
-  end
-end
-
-function wrk.init(args)
-  if not wrk.headers["Host"] then
-    local host = wrk.host
-    local port = wrk.port
-
-    host = host:find(":") and ("[" .. host .. "]") or host
-    host = port and (host .. ":" .. port) or host
-
-    wrk.headers["Host"] = host
-  end
-
-  if type(init) == "function" then
-    init(args)
-  end
-
-  local req = wrk.format()
-  wrk.request = function()
-    return req
-  end
-end
-
-function wrk.format(scheme, host, port, method, url, headers, body, timeout, version)
+function format(scheme, host, port, method, url, headers, body, timeout, version)
   local host    = host or wrk.host
   local scheme  = scheme or wrk.scheme
   local port    = port or wrk.port
@@ -50,7 +23,7 @@ function wrk.format(scheme, host, port, method, url, headers, body, timeout, ver
 
   if headers ~= nil then
     if not headers["Host"] then
-      headers["Host"] = host
+      wrk.headers["Host"] = host
     end
   end
 
@@ -68,5 +41,8 @@ function wrk.format(scheme, host, port, method, url, headers, body, timeout, ver
 end
 
 function request()
-  return wrk.format()
+  return format()
+end
+
+function init(args)
 end
