@@ -10,7 +10,7 @@ pub struct HttpRequest {
     pub host: String,
     pub port: u32,
     pub method: String,
-    pub url: String,
+    pub path: String,
     pub headers: HashMap<String, String>,
     pub timeout: u32,
     pub version: String,

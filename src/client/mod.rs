@@ -102,7 +102,7 @@ impl Client {
                 request.scheme,
                 request.host,
                 request.port,
-                request.url.strip_prefix("/").unwrap_or(&request.url)
+                request.path.strip_prefix("/").unwrap_or(&request.path)
             ))
         };
         let headers = {
