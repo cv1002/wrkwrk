@@ -11,7 +11,7 @@ panic = "abort"
 
 [dependencies]
 # lazy
-once_cell      = "1.16.0"
+once_cell      = "1.17.1"
 async-oncecell = "0.2.0"
 
 # httpclient
@@ -20,15 +20,15 @@ version = "0.11.13"
 features = ["default", "rustls-tls", "native-tls-alpn"]
 
 [dependencies.serde]
-version = "1.0.148"
+version = "1.0.163"
 features = ["derive"]
 
 [dependencies.mlua]
-version = "0.8.6"
+version = "0.8.9"
 features = ["lua54", "serialize", "send", "vendored", "async", "macros"]
 
 [dependencies.clap]
-version = "4.0.8"
+version = "4.2.7"
 features = ["derive"]
 
 [dependencies.tokio]
